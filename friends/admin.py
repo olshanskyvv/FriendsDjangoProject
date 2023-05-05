@@ -11,10 +11,9 @@ class MyUserAdmin(UserAdmin):
 
 
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'recipient', 'answer')
+    list_display = ('sender', 'recipient',)
     list_display_links = ('sender', 'recipient',)
     search_fields = ('sender', 'recipient',)
-    list_editable = ('answer',)
 
 
 admin.site.register(User, UserAdmin)

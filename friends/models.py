@@ -15,7 +15,6 @@ class FriendRequest(models.Model):
                                   verbose_name='Получатель',
                                   on_delete=models.CASCADE,
                                   related_name='requests_received')
-    answer = models.BooleanField(verbose_name='Ответ', null=True)
 
     class Meta:
         verbose_name = 'Заявка'
