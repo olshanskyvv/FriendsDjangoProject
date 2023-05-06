@@ -9,5 +9,4 @@ urlpatterns = [
     path('users/<str:username>/outgoing', OutgoingRequestsAPIView.as_view()),
     path('requests', RequestsAPIView.as_view()),
     path('friends', FriendCheckingAPIView.as_view()),
-
 ]
