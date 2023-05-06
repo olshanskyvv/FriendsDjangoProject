@@ -38,7 +38,7 @@ class IncomingRequestsAPIView(APIView):
         """Answering to incoming friends requests"""
         username = kwargs.get('username', None)
         answer = request.data.get('answer', None)
-        if not username or not answer:
+        if not username or answer is None:
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             recipient = User.objects.get(username=username)
