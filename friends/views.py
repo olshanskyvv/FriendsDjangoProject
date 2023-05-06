@@ -1,7 +1,5 @@
-from django.db.models import Q
-from django.forms import model_to_dict
-from rest_framework import generics
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, ListAPIView
+from django.db.models import Q, Model
+from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -30,7 +28,7 @@ class IncomingRequestsAPIView(APIView):
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             instance = User.objects.get(username=username)
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         requests = FriendRequest.objects.all().filter(recipient=instance)
         serializer = ReceivedRequestSerializer(requests, many=True)
@@ -44,12 +42,9 @@ class IncomingRequestsAPIView(APIView):
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             recipient = User.objects.get(username=username)
-            print(recipient)
             sender = User.objects.get(username=request.data['username'])
-            print(sender)
             friend_request = FriendRequest.objects.get(Q(sender=sender) & Q(recipient=recipient))
-            print(request)
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user or friend request not found'}, status=status.HTTP_404_NOT_FOUND)
 
         friend_request.delete()
@@ -68,7 +63,7 @@ class OutgoingRequestsAPIView(APIView):
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             instance = User.objects.get(username=username)
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         requests = FriendRequest.objects.all().filter(sender=instance)
         serializer = SentRequestSerializer(requests, many=True)
@@ -83,7 +78,7 @@ class FriendsAPIView(APIView):
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             instance = User.objects.get(username=username)
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         friends = instance.friends.all()
         if friends:
@@ -99,16 +94,21 @@ class FriendsAPIView(APIView):
         try:
             sender = User.objects.get(username=username)
             recipient = User.objects.get(username=request.data['username'])
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        if sender == recipient:
+            return Response({'error': "you can't send a request to yourself"}, status=status.HTTP_400_BAD_REQUEST)
+        if recipient in sender.friends.all():
+            return Response({'error': f'{recipient.username} is already your friend'}, status=status.HTTP_400_BAD_REQUEST)
         back_friend_request = FriendRequest.objects.filter(sender=recipient, recipient=sender)
         if back_friend_request:
             sender.friends.add(recipient)
             back_friend_request.delete()
             return Response({'response': f'User {recipient.username} has already sent request to you. ' +
                                          f'Now you are friends'})
-
+        if FriendRequest.objects.filter(sender=sender, recipient=recipient):
+            return Response({'response': f'you have already sent request to {recipient.username}'},
+                            status=status.HTTP_400_BAD_REQUEST)
         friend_request = FriendRequest.objects.create(sender=sender, recipient=recipient)
         return Response(FriendRequestSerializer(friend_request).data)
 
@@ -120,7 +120,7 @@ class FriendsAPIView(APIView):
         try:
             user = User.objects.get(username=username)
             friend = user.friends.get(username=request.data['username'])
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user.friends.remove(friend)
         return Response({'response': f'friend {friend.username} was deleted'})
@@ -138,7 +138,7 @@ class FriendCheckingAPIView(APIView):
             user2 = User.objects.get(username=username2)
             outgoing = FriendRequest.objects.filter(Q(sender=user1) & Q(recipient=user2))
             incoming = FriendRequest.objects.filter(Q(sender=user2) & Q(recipient=user1))
-        except:
+        except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         if user1 in user2.friends.all():
             return Response({'response': 'you are friends'})
