@@ -1,0 +1,374 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is Django service for friends
+  version: "1.0.0"
+  title: Django friends service
+servers:
+  - url: 'https://0.0.0.0:8000/'
+paths:
+  /users:
+    post:
+      summary: Register a new user to the service
+      responses:
+        '201':
+          description: Created
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+    get:
+      summary: Returns a list of registered users
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  /requests:
+    get:
+      summary: Returns a list of active friend requests
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FriendRequest'
+  '/friends':
+    get:
+      summary: Check if two users are friends
+      requestBody:
+        $ref: '#/components/requestBodies/TwoUsers'
+      responses:
+        '200':
+          description: Friendship status of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '400':
+          description: Missing required field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+  '/users/{username}/friends':
+    get:
+      summary: Get users friends by user name
+      parameters:
+        - name: username
+          in: path
+          description: The name of user whose friend we want to see.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid username supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '404':
+          description: Friends or user not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+    post:
+      summary: Create friend request.
+      parameters:
+        - name: username
+          in: path
+          description: The name of user who want to send request.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Add user to friends
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '201':
+          description: Request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '400':
+          description: Invalid user or recipient supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+    delete:
+      summary: Delete friend
+      parameters:
+        - name: username
+          in: path
+          description: The name of user whose friend we want to delete.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Friend was deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '400':
+          description: Invalid username supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  '/users/{username}/incoming':
+    get:
+      summary: Get users incoming requests by user name
+      parameters:
+        - name: username
+          in: path
+          description: The name of user whose incoming requests we want to see.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sender:
+                      $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid username supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    post:
+      summary: Answering to incoming friend request.
+      parameters:
+        - name: username
+          in: path
+          description: The name of user whose incoming request we want to answer.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Answer was sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+        '400':
+          description: Invalid user or sender or answer supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: User or request not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      requestBody:
+        $ref: '#/components/requestBodies/RequestAnswer'
+  '/users/{username}/outgoing':
+    get:
+      summary: Get users outgoing requests by user name
+      parameters:
+        - name: username
+          in: path
+          description: The name of user whose outgoing requests we want to see.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    recipient:
+                      $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid username supplied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+      required:
+        - username
+    FriendRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        sender:
+          $ref: '#/components/schemas/User'
+        recipient:
+          $ref: '#/components/schemas/User'
+  requestBodies:
+    User:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+      description: User object that needs for request
+      required: true
+    RequestAnswer:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              answer:
+                type: boolean
+            required:
+              - username
+              - answer
+      description: Answer to friend request from user with username
+      required: true
+    TwoUsers:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              username1:
+                type: string
+              username2:
+                type: string
+            required:
+              - username1
+              - username2
+      description: Users for friendship checking
+      required: true
