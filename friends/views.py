@@ -38,7 +38,7 @@ class IncomingRequestsAPIView(APIView):
         """Answering to incoming friends requests"""
         username = kwargs.get('username', None)
         answer = request.data.get('answer', None)
-        if not username or answer is None:
+        if not username or not isinstance(answer, bool):
             return Response({'error': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             recipient = User.objects.get(username=username)
@@ -110,7 +110,7 @@ class FriendsAPIView(APIView):
             return Response({'response': f'you have already sent request to {recipient.username}'},
                             status=status.HTTP_400_BAD_REQUEST)
         friend_request = FriendRequest.objects.create(sender=sender, recipient=recipient)
-        return Response(FriendRequestSerializer(friend_request).data)
+        return Response(FriendRequestSerializer(friend_request).data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         """Deleting friend"""
