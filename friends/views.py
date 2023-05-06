@@ -96,14 +96,19 @@ class FriendsAPIView(APIView):
             recipient = User.objects.get(username=request.data['username'])
         except Model.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        if sender == recipient:
+            return Response({'error': "you can't send a request to yourself"}, status=status.HTTP_400_BAD_REQUEST)
+        if recipient in sender.friends.all():
+            return Response({'error': f'{recipient.username} is already your friend'}, status=status.HTTP_400_BAD_REQUEST)
         back_friend_request = FriendRequest.objects.filter(sender=recipient, recipient=sender)
         if back_friend_request:
             sender.friends.add(recipient)
             back_friend_request.delete()
             return Response({'response': f'User {recipient.username} has already sent request to you. ' +
                                          f'Now you are friends'})
-
+        if FriendRequest.objects.filter(sender=sender, recipient=recipient):
+            return Response({'response': f'you have already sent request to {recipient.username}'},
+                            status=status.HTTP_400_BAD_REQUEST)
         friend_request = FriendRequest.objects.create(sender=sender, recipient=recipient)
         return Response(FriendRequestSerializer(friend_request).data)
 
