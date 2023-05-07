@@ -5,7 +5,7 @@ info:
   version: "1.0.0"
   title: Django friends service
 servers:
-  - url: 'https://0.0.0.0:8000/'
+  - url: 'https://0.0.0.0:8000/api'
 paths:
   /users:
     post:
